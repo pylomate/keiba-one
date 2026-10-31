@@ -1,0 +1,132 @@
+<!DOCTYPE html>
+<html lang="ja">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>KEIBA ONE</title>
+<style>
+body {
+  margin: 0;
+  padding: 20px;
+  background: #101820;
+  color: white;
+  font-family: sans-serif;
+}
+h1 { text-align: center; color: #55d6a0; }
+.card {
+  background: #1c2933;
+  padding: 18px;
+  border-radius: 15px;
+  margin: 15px 0;
+}
+label { display: block; margin-top: 15px; }
+select, input, button {
+  width: 100%;
+  box-sizing: border-box;
+  padding: 14px;
+  margin-top: 7px;
+  border-radius: 9px;
+  border: 0;
+  font-size: 16px;
+}
+button {
+  background: #20a875;
+  color: white;
+  font-weight: bold;
+  margin-top: 22px;
+}
+.result {
+  background: #263943;
+  padding: 15px;
+  border-radius: 10px;
+  margin-top: 12px;
+}
+.small { color: #aab8c2; font-size: 13px; }
+</style>
+</head>
+<body>
+
+<h1>🏇 KEIBA ONE</h1>
+<p style="text-align:center">軸馬と期待値のある穴馬を自動分析</p>
+
+<div class="card">
+  <h2>レース選択</h2>
+
+  <label>開催日</label>
+  <input type="date" id="date">
+
+  <label>競馬場</label>
+  <select id="track">
+    <option>東京</option>
+    <option>中山</option>
+    <option>京都</option>
+    <option>阪神</option>
+    <option>新潟</option>
+    <option>福島</option>
+    <option>小倉</option>
+    <option>札幌</option>
+    <option>函館</option>
+    <option>中京</option>
+  </select>
+
+  <label>レース番号</label>
+  <select id="race">
+    <option value="1">1R</option>
+    <option value="2">2R</option>
+    <option value="3">3R</option>
+    <option value="4">4R</option>
+    <option value="5">5R</option>
+    <option value="6">6R</option>
+    <option value="7">7R</option>
+    <option value="8">8R</option>
+    <option value="9">9R</option>
+    <option value="10">10R</option>
+    <option value="11">11R</option>
+    <option value="12">12R</option>
+  </select>
+
+  <button onclick="analyze()">このレースを予想する</button>
+  <p class="small" id="status">レースを選択してください。</p>
+</div>
+
+<div class="card">
+  <h2>予想結果</h2>
+  <div class="result">
+    <h3>🎯 軸馬</h3>
+    <p id="axis">まだ予想されていません</p>
+  </div>
+  <div class="result">
+    <h3>💎 期待値のある穴馬</h3>
+    <p id="hole">まだ予想されていません</p>
+  </div>
+  <div class="result">
+    <h3>分析理由</h3>
+    <p id="reason">ここに分析内容が表示されます。</p>
+  </div>
+</div>
+
+<script>
+document.getElementById("date").value =
+  new Date().toLocaleDateString("sv-SE");
+
+function analyze() {
+  const date = document.getElementById("date").value;
+  const track = document.getElementById("track").value;
+  const race = document.getElementById("race").value;
+
+  document.getElementById("status").textContent =
+    date + " " + track + " " + race + "R を選択しました。";
+
+  document.getElementById("axis").textContent =
+    "出走馬データの取得待ち";
+
+  document.getElementById("hole").textContent =
+    "出走馬データの取得待ち";
+
+  document.getElementById("reason").textContent =
+    "次の段階で出走表・近走成績・コース適性などを取得して分析機能を接続します。";
+}
+</script>
+
+</body>
+</html>

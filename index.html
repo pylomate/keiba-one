@@ -86,5 +86,40 @@ function prepare(){
  document.getElementById("hole").textContent="出走馬データの取得待ち";
 }
 </script>
+
+<script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2"></script>
+<script>
+const SUPABASE_URL =https://yvaqilfhhvoofsagibkk.supabase.co
+const SUPABASE_KEY =sb_publishable_u8MierJ7JBI9wY4ZrB4YAA_Wm9zQCTc
+
+const db = window.supabase.createClient(
+  SUPABASE_URL,
+  SUPABASE_KEY
+);
+
+const testButton = document.createElement("button");
+testButton.textContent = "データベース接続テスト";
+testButton.style.marginTop = "10px";
+document.querySelector("footer").before(testButton);
+
+const status = document.createElement("p");
+status.style.textAlign = "center";
+status.style.fontSize = "13px";
+testButton.after(status);
+
+testButton.onclick = async () => {
+  status.textContent = "接続確認中...";
+  const { data, error } = await db
+    .from("race_entries")
+    .select("id")
+    .limit(1);
+
+  if (error) {
+    status.textContent = "接続エラー：" + error.message;
+  } else {
+    status.textContent = "Supabase接続成功！";
+  }
+};
+</script>
 </body>
 </html>

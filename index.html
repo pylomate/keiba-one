@@ -1,132 +1,90 @@
+
 <!DOCTYPE html>
 <html lang="ja">
 <head>
 <meta charset="UTF-8">
 <meta name="viewport" content="width=device-width, initial-scale=1">
+<meta name="theme-color" content="#101827">
 <title>KEIBA ONE</title>
 <style>
-body {
-  margin: 0;
-  padding: 20px;
-  background: #101820;
-  color: white;
-  font-family: sans-serif;
-}
-h1 { text-align: center; color: #55d6a0; }
-.card {
-  background: #1c2933;
-  padding: 18px;
-  border-radius: 15px;
-  margin: 15px 0;
-}
-label { display: block; margin-top: 15px; }
-select, input, button {
-  width: 100%;
-  box-sizing: border-box;
-  padding: 14px;
-  margin-top: 7px;
-  border-radius: 9px;
-  border: 0;
-  font-size: 16px;
-}
-button {
-  background: #20a875;
-  color: white;
-  font-weight: bold;
-  margin-top: 22px;
-}
-.result {
-  background: #263943;
-  padding: 15px;
-  border-radius: 10px;
-  margin-top: 12px;
-}
-.small { color: #aab8c2; font-size: 13px; }
+*{box-sizing:border-box}
+body{margin:0;background:#101827;color:#f5f7fb;font-family:-apple-system,BlinkMacSystemFont,sans-serif;padding:20px}
+header{text-align:center;padding:22px 0}
+h1{font-size:30px;letter-spacing:2px;margin:0;color:#f4c95d}
+.sub{color:#aab5c5;font-size:12px;margin-top:7px}
+.panel{background:#1c293b;border:1px solid #34445a;border-radius:15px;padding:17px;margin:15px 0}
+h2{font-size:17px;margin:0 0 15px}
+label{display:block;color:#b9c5d5;font-size:13px;margin:12px 0 6px}
+select,input,textarea{width:100%;padding:13px;border-radius:9px;border:1px solid #52627a;background:#101827;color:white;font-size:16px}
+button{width:100%;border:0;border-radius:10px;padding:15px;background:#e9bd4c;color:#172033;font-weight:bold;font-size:17px;margin-top:17px}
+button:active{opacity:.8}
+.result{border-left:4px solid #e9bd4c;padding:12px;background:#26364b;border-radius:8px;margin-top:12px}
+.muted{font-size:12px;color:#aab5c5;line-height:1.7}
+#message{color:#f4c95d;font-size:14px;margin-top:12px}
+footer{text-align:center;color:#718096;font-size:11px;margin:25px 0}
 </style>
 </head>
 <body>
+<header>
+<h1>KEIBA ONE</h1>
+<div class="sub">競馬予想シミュレーター</div>
+</header>
 
-<h1>🏇 KEIBA ONE</h1>
-<p style="text-align:center">軸馬と期待値のある穴馬を自動分析</p>
+<section class="panel">
+<h2>レース設定</h2>
+<label>開催日</label>
+<input type="date" id="date">
+<label>競馬場</label>
+<select id="course">
+<option>東京</option><option>中山</option><option>京都</option>
+<option>阪神</option><option>新潟</option><option>福島</option>
+<option>小倉</option><option>札幌</option><option>函館</option>
+<option>中京</option>
+</select>
+<label>レース番号</label>
+<select id="race">
+</select>
+<button onclick="prepare()">このレースを選択</button>
+<div id="message"></div>
+</section>
 
-<div class="card">
-  <h2>レース選択</h2>
-
-  <label>開催日</label>
-  <input type="date" id="date">
-
-  <label>競馬場</label>
-  <select id="track">
-    <option>東京</option>
-    <option>中山</option>
-    <option>京都</option>
-    <option>阪神</option>
-    <option>新潟</option>
-    <option>福島</option>
-    <option>小倉</option>
-    <option>札幌</option>
-    <option>函館</option>
-    <option>中京</option>
-  </select>
-
-  <label>レース番号</label>
-  <select id="race">
-    <option value="1">1R</option>
-    <option value="2">2R</option>
-    <option value="3">3R</option>
-    <option value="4">4R</option>
-    <option value="5">5R</option>
-    <option value="6">6R</option>
-    <option value="7">7R</option>
-    <option value="8">8R</option>
-    <option value="9">9R</option>
-    <option value="10">10R</option>
-    <option value="11">11R</option>
-    <option value="12">12R</option>
-  </select>
-
-  <button onclick="analyze()">このレースを予想する</button>
-  <p class="small" id="status">レースを選択してください。</p>
+<section class="panel">
+<h2>予想結果</h2>
+<div class="result">
+<strong>軸馬</strong>
+<p id="axis">レースを選択してください</p>
 </div>
-
-<div class="card">
-  <h2>予想結果</h2>
-  <div class="result">
-    <h3>🎯 軸馬</h3>
-    <p id="axis">まだ予想されていません</p>
-  </div>
-  <div class="result">
-    <h3>💎 期待値のある穴馬</h3>
-    <p id="hole">まだ予想されていません</p>
-  </div>
-  <div class="result">
-    <h3>分析理由</h3>
-    <p id="reason">ここに分析内容が表示されます。</p>
-  </div>
+<div class="result">
+<strong>期待値候補</strong>
+<p id="hole">出走馬データの取得後に分析します</p>
 </div>
+<p class="muted">各馬の能力・コース適性・距離適性・近走内容・展開を分析し、軸馬1頭と期待値候補1頭を選びます。</p>
+</section>
+
+<section class="panel">
+<h2>出走馬データ</h2>
+<p class="muted">次の開発段階で、選択したレースの出走馬を自動取得する機能を接続します。現在はまだデータ取得・自動予想には対応していません。</p>
+</section>
+
+<footer>KEIBA ONE</footer>
 
 <script>
-document.getElementById("date").value =
-  new Date().toLocaleDateString("sv-SE");
-
-function analyze() {
-  const date = document.getElementById("date").value;
-  const track = document.getElementById("track").value;
-  const race = document.getElementById("race").value;
-
-  document.getElementById("status").textContent =
-    date + " " + track + " " + race + "R を選択しました。";
-
-  document.getElementById("axis").textContent =
-    "出走馬データの取得待ち";
-
-  document.getElementById("hole").textContent =
-    "出走馬データの取得待ち";
-
-  document.getElementById("reason").textContent =
-    "次の段階で出走表・近走成績・コース適性などを取得して分析機能を接続します。";
+const race=document.getElementById("race");
+for(let i=1;i<=12;i++){
+ const op=document.createElement("option");
+ op.value=i;op.textContent=i+"R";race.appendChild(op);
+}
+document.getElementById("date").value=new Date().toLocaleDateString("sv-SE");
+function prepare(){
+ const d=document.getElementById("date").value;
+ const c=document.getElementById("course").value;
+ const r=race.value;
+ if(!d){document.getElementById("message").textContent="開催日を選択してください";return;}
+ document.getElementById("message").textContent=
+ d+" "+c+"競馬場 "+r+"R を選択しました。";
+ document.getElementById("axis").textContent="出走馬データの取得待ち";
+ document.getElementById("hole").textContent="出走馬データの取得待ち";
 }
 </script>
-
 </body>
 </html>

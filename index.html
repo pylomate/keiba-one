@@ -85,7 +85,7 @@ function prepare(){
  d+" "+c+"競馬場 "+r+"R を選択しました。";
  document.getElementById("axis").textContent="出走馬データの取得待ち";
  document.getElementById("hole").textContent="出走馬データの取得待ち";
-}
+loadEntries(d,c,r);}
 </script>
 
 <script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2"></script>
@@ -121,6 +121,46 @@ testButton.onclick = async () => {
     status.textContent = "Supabase接続成功！";
   }
 };
+async function loadEntries(d,c,r) {
+  const area = document.getElementById("entries");
+  area.textContent = "出走馬データを読み込み中...";
+
+  const { data, error } = await db
+    .from("race_entries")
+    .select("horse_number,horse_name,jockey,weight,running_style")
+    .eq("race_date", d)
+    .eq("course", c)
+    .eq("race_number", Number(r))
+    .order("horse_number", { ascending: true });
+
+  if (error) {
+    area.textContent = "読み込みエラー：" + error.message;
+    return;
+  }
+
+  if (!data || data.length === 0) {
+    area.textContent = "このレースの出走馬データはまだ登録されていません。";
+    return;
+  }
+
+  area.replaceChildren();
+
+  const heading = document.createElement("h3");
+  heading.textContent = "出走馬一覧";
+  area.appendChild(heading);
+
+  data.forEach(horse => {
+    const item = document.createElement("p");
+    item.textContent =
+      horse.horse_number + "番 " +
+      horse.horse_name + " ／ " +
+      (horse.jockey || "騎手未登録") + " ／ " +
+      (horse.weight ?? "斤量未登録") + "kg ／ " +
+      (horse.running_style || "脚質未登録");
+
+    area.appendChild(item);
+  });
+}
 </script>
 </body>
 </html>

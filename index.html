@@ -100,7 +100,7 @@ const db = window.supabase.createClient(
 const testButton = document.createElement("button");
 testButton.textContent = "データベース接続テスト";
 testButton.style.marginTop = "10px";
-document.querySelector("footer").before(testButton);
+document.body.appendChild(testButton);
 
 const status = document.createElement("p");
 status.style.textAlign = "center";

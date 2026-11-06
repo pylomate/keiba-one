@@ -127,7 +127,7 @@ async function loadEntries(d,c,r) {
 
   const { data, error } = await db
     .from("race_entries")
-    .select("horse_number,horse_name,jockey,weight,running_style")
+    .select("horse_number,horse_name,jockey,weight,running_style,total_ability,course_aptitude,distance_aptitude,recent_form")
     .eq("race_date", d)
     .eq("course", c)
     .eq("race_number", Number(r))
@@ -160,7 +160,63 @@ async function loadEntries(d,c,r) {
 
     area.appendChild(item);
   });
+    predictHorses(data);
 }
+
+function predictHorses(data) {
+  const axis = document.getElementById("axis");
+  const hole = document.getElementById("hole");
+
+  const fields = [
+    "total_ability",
+    "course_aptitude",
+    "distance_aptitude",
+    "recent_form"
+  ];
+
+  const scored = data.map(horse => {
+    let total = 0;
+    let count = 0;
+
+    fields.forEach(field => {
+      const value = Number(horse[field]);
+      if (horse[field] !== null &&
+          horse[field] !== "" &&
+          Number.isFinite(value) &&
+          value > 0) {
+        total += value;
+        count++;
+      }
+    });
+
+    return {
+      ...horse,
+      score: count ? total / count : 0,
+      count
+    };
+  });
+
+  const valid = scored.filter(h => h.count > 0);
+
+  if (valid.length < 2) {
+    axis.textContent = "評価データが不足しています";
+    hole.textContent = "能力・適性などの登録が必要です";
+    return;
+  }
+
+  valid.sort((a, b) => b.score - a.score);
+
+  axis.textContent =
+    valid[0].horse_number + "番 " +
+    valid[0].horse_name +
+    "（評価 " + valid[0].score.toFixed(1) + "）";
+
+  hole.textContent =
+    valid[1].horse_number + "番 " +
+    valid[1].horse_name +
+    "（暫定候補 " + valid[1].score.toFixed(1) + "）";
+}
+
 </script>
 </body>
 </html>

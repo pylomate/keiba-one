@@ -185,19 +185,22 @@ function predictHorses(data, conditions) {
     "recent_form"
   ];
 
-    const escapeCount = data.filter(h =>
-    (h.running_style || "").includes("逃げ")
-  ).length;
+      const isEscapeHorse = horse => {
+    const positions =
+      String(horse.previous_corner_positions || "")
+        .match(/\d+/g) || [];
 
-  const fieldSize = conditions?.field_size || data.length;
+    return positions.some(position =>
+      Number(position) >= 1 &&
+      Number(position) <= 3
+    );
+  };
+    const escapeCount = data.filter(isEscapeHorse).length;
 
-  let escapeRatio = conditions?.escape_horse_ratio;
+    const fieldSize = data.length;
 
-  if (escapeRatio === null || escapeRatio === undefined) {
-    escapeRatio = escapeCount / fieldSize;
-  } else if (escapeRatio > 1) {
-    escapeRatio = escapeRatio / 100;
-  }
+  const escapeRatio =
+    fieldSize > 0 ? escapeCount / fieldSize : 0;
 
   let predictedPace = "平均ペース";
 
@@ -209,17 +212,38 @@ function predictHorses(data, conditions) {
 
   const firstCornerDistance =
     conditions?.first_corner_distance || 0;
-      const escapeHorses = data
+          const escapeHorses = data
+    .filter(isEscapeHorse)
     .filter(h =>
-      (h.running_style || "").includes("逃げ")
-    )
-    .filter(h =>
-      h.gate_number !== null &&
-      h.gate_number !== undefined
+      h.horse_number !== null &&
+      h.horse_number !== undefined
     )
     .sort((a, b) =>
-      Number(a.gate_number) - Number(b.gate_number)
+      Number(a.horse_number) - Number(b.horse_number)
     );
+      let adjacentEscapePairs = 0;
+
+  for (let i = 1; i < escapeHorses.length; i++) {
+    const previousNo =
+      Number(escapeHorses[i - 1].horse_number);
+
+    const currentNo =
+      Number(escapeHorses[i].horse_number);
+
+    if (currentNo - previousNo === 1) {
+      adjacentEscapePairs++;
+    }
+  }
+
+  const escapeGroupDensity =
+    adjacentEscapePairs > 0 ? "密集" : "分散";
+      if (escapeRatio > 0.30 && escapeRatio < 0.50) {
+    if (escapeGroupDensity === "密集") {
+      predictedPace = "平均〜やや速め";
+    } else {
+      predictedPace = "平均〜やや落ち着く";
+    }
+  }
   const scored = data.map(horse => {
     let total = 0;
     let count = 0;
@@ -276,10 +300,7 @@ function predictHorses(data, conditions) {
     .filter(h => h.horse_number !== axisHorse.horse_number)
     .map(h => ({
       ...h,
-      opportunityScore:
-        h.score +
-        (h.escapeSandwich ? 2 : 0) +
-        (h.outsideOfLeader ? 1 : 0)
+      opportunityScore: h.score
     }))
     .sort((a, b) =>
       b.opportunityScore - a.opportunityScore

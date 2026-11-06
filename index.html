@@ -127,7 +127,9 @@ async function loadEntries(d,c,r) {
 
   const { data, error } = await db
     .from("race_entries")
-    .select("horse_number,horse_name,jockey,weight,running_style,total_ability,course_aptitude,distance_aptitude,recent_form")
+    
+.select("horse_number,horse_name,jockey,weight,running_style,total_ability,course_aptitude,distance_aptitude,recent_form,gate_number,previous_distance,previous_corner_positions,previous_finish_margin,last_speed,pace_aptitude,strengths,concerns")
+
     .eq("race_date", d)
     .eq("course", c)
     .eq("race_number", Number(r))
@@ -142,6 +144,15 @@ async function loadEntries(d,c,r) {
     area.textContent = "このレースの出走馬データはまだ登録されていません。";
     return;
   }
+
+ 
+const { data: conditions, error: conditionError } = await db
+  .from("race_conditions")
+  .select("*")
+  .eq("race_date", d)
+  .eq("course", c)
+  .eq("race_number", Number(r))
+  .maybeSingle();
 
   area.replaceChildren();
 
@@ -160,10 +171,10 @@ async function loadEntries(d,c,r) {
 
     area.appendChild(item);
   });
-    predictHorses(data);
+   predictHorses(data, conditions);
 }
 
-function predictHorses(data) {
+function predictHorses(data, conditions) {
   const axis = document.getElementById("axis");
   const hole = document.getElementById("hole");
 
@@ -174,10 +185,67 @@ function predictHorses(data) {
     "recent_form"
   ];
 
+    const escapeCount = data.filter(h =>
+    (h.running_style || "").includes("逃げ")
+  ).length;
+
+  const fieldSize = conditions?.field_size || data.length;
+
+  let escapeRatio = conditions?.escape_horse_ratio;
+
+  if (escapeRatio === null || escapeRatio === undefined) {
+    escapeRatio = escapeCount / fieldSize;
+  } else if (escapeRatio > 1) {
+    escapeRatio = escapeRatio / 100;
+  }
+
+  let predictedPace = "平均ペース";
+
+  if (escapeRatio <= 0.30) {
+    predictedPace = "スローペース";
+  } else if (escapeRatio >= 0.50) {
+    predictedPace = "ハイペース";
+  }
+
+  const firstCornerDistance =
+    conditions?.first_corner_distance || 0;
+      const escapeHorses = data
+    .filter(h =>
+      (h.running_style || "").includes("逃げ")
+    )
+    .filter(h =>
+      h.gate_number !== null &&
+      h.gate_number !== undefined
+    )
+    .sort((a, b) =>
+      Number(a.gate_number) - Number(b.gate_number)
+    );
   const scored = data.map(horse => {
     let total = 0;
     let count = 0;
+    const horseGate = Number(horse.gate_number);
 
+    const hasGateInfo =
+      horse.gate_number !== null &&
+      horse.gate_number !== undefined;
+
+    const escapeInside = hasGateInfo &&
+      escapeHorses.some(e =>
+        Number(e.gate_number) < horseGate
+      );
+
+    const escapeOutside = hasGateInfo &&
+      escapeHorses.some(e =>
+        Number(e.gate_number) > horseGate
+      );
+
+    const escapeSandwich =
+      escapeInside && escapeOutside;
+
+    const outsideOfLeader = hasGateInfo &&
+      escapeHorses.some(e =>
+        Number(e.gate_number) === horseGate - 1
+      );
     fields.forEach(field => {
       const value = Number(horse[field]);
       if (horse[field] !== null &&

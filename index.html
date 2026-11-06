@@ -229,23 +229,17 @@ function predictHorses(data, conditions) {
       horse.gate_number !== null &&
       horse.gate_number !== undefined;
 
-    const escapeInside = hasGateInfo &&
-      escapeHorses.some(e =>
-        Number(e.gate_number) < horseGate
-      );
+        const horseNo = Number(horse.horse_number);
 
-    const escapeOutside = hasGateInfo &&
-      escapeHorses.some(e =>
-        Number(e.gate_number) > horseGate
-      );
+    const escapeSandwich = escapeHorses.some(e =>
+      Number(e.horse_number) === horseNo - 1
+    ) && escapeHorses.some(e =>
+      Number(e.horse_number) === horseNo + 1
+    );
 
-    const escapeSandwich =
-      escapeInside && escapeOutside;
-
-    const outsideOfLeader = hasGateInfo &&
-      escapeHorses.some(e =>
-        Number(e.gate_number) === horseGate - 1
-      );
+    const outsideOfLeader = escapeHorses.some(e =>
+      Number(e.horse_number) === horseNo - 1
+    );
     fields.forEach(field => {
       const value = Number(horse[field]);
       if (horse[field] !== null &&
@@ -259,6 +253,8 @@ function predictHorses(data, conditions) {
 
     return {
       ...horse,
+        escapeSandwich: escapeSandwich,
+  outsideOfLeader: outsideOfLeader,
       score: count ? total / count : 0,
       count
     };
@@ -272,17 +268,35 @@ function predictHorses(data, conditions) {
     return;
   }
 
-  valid.sort((a, b) => b.score - a.score);
+    valid.sort((a, b) => b.score - a.score);
 
-  axis.textContent =
-    valid[0].horse_number + "番 " +
-    valid[0].horse_name +
-    "（評価 " + valid[0].score.toFixed(1) + "）";
+  const axisHorse = valid[0];
+
+  const holeCandidates = valid
+    .filter(h => h.horse_number !== axisHorse.horse_number)
+    .map(h => ({
+      ...h,
+      opportunityScore:
+        h.score +
+        (h.escapeSandwich ? 2 : 0) +
+        (h.outsideOfLeader ? 1 : 0)
+    }))
+    .sort((a, b) =>
+      b.opportunityScore - a.opportunityScore
+    );
+
+  const holeHorse = holeCandidates[0];
+
+    axis.textContent =
+    axisHorse.horse_number + "番 " +
+    axisHorse.horse_name +
+    "（能力評価 " + axisHorse.score.toFixed(1) + "）";
 
   hole.textContent =
-    valid[1].horse_number + "番 " +
-    valid[1].horse_name +
-    "（暫定候補 " + valid[1].score.toFixed(1) + "）";
+    holeHorse.horse_number + "番 " +
+    holeHorse.horse_name +
+    "（期待値候補スコア " +
+    holeHorse.opportunityScore.toFixed(1) + "）";
 }
 
 </script>

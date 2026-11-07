@@ -247,11 +247,6 @@ function predictHorses(data, conditions) {
   const scored = data.map(horse => {
     let total = 0;
     let count = 0;
-    const horseGate = Number(horse.gate_number);
-
-    const hasGateInfo =
-      horse.gate_number !== null &&
-      horse.gate_number !== undefined;
 
         const horseNo = Number(horse.horse_number);
 
@@ -274,12 +269,55 @@ function predictHorses(data, conditions) {
         count++;
       }
     });
+    let tripBonus = 0;
 
-    return {
+// 逃げ馬に挟まれる馬は展開面をプラス評価
+if (escapeSandwich) {
+  tripBonus += 5;
+}
+// 逃げ馬のすぐ外側にいる馬もプラス評価
+else if (outsideOfLeader) {
+  tripBonus += 3;
+}
+
+// ハイペースなら逃げ馬に少しマイナス
+if (predictedPace === "ハイペース" && isEscapeHorse(horse)) {
+  tripBonus -= 3;
+}
+
+// スローペースなら逃げ馬に少しプラス
+if (predictedPace === "スローペース" && isEscapeHorse(horse)) {
+  tripBonus += 2;
+}
+   // 最初のコーナーまでの距離による補正
+if (firstCornerDistance > 0 && hasGateInfo) {
+
+  // 300m未満：外側の逃げ馬は位置を取りにくい
+  if (firstCornerDistance < 300 &&
+      horseGate > data.length * 0.65 &&
+      isEscapeHorse(horse)) {
+    tripBonus -= 2;
+  }
+
+  // 300〜500m：内側の馬に少しプラス
+  if (firstCornerDistance >= 300 &&
+      firstCornerDistance <= 500 &&
+      horseGate <= data.length * 0.35) {
+    tripBonus += 1;
+  }
+
+  // 500m超：ハイペースなら逃げ馬にマイナス
+  if (firstCornerDistance > 500 &&
+      predictedPace === "ハイペース" &&
+      isEscapeHorse(horse)) {
+    tripBonus -= 2;
+  }
+}
+     return {
       ...horse,
         escapeSandwich: escapeSandwich,
   outsideOfLeader: outsideOfLeader,
-      score: count ? total / count : 0,
+      score: count ? total / count + tripBonus : 0,
       count
     };
   });
